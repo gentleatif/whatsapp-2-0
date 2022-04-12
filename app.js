@@ -712,6 +712,6 @@ app.post("/clear-message", [body("number").notEmpty()], async (req, res) => {
     });
 });
 
-server.listen(process.env.PORT, function () {
+server.listen(process.env.port || "8000", function () {
   console.log("App running on : HEROKU");
 });
