@@ -44,8 +44,6 @@ app.use(
   })
 );
 
-// const client = new Client({
-// });
 
 const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
 client.on("message", (msg) => {
@@ -712,6 +710,6 @@ app.post("/clear-message", [body("number").notEmpty()], async (req, res) => {
     });
 });
 
-server.listen(process.env.port || "8000", function () {
-  console.log("App running on : HEROKU");
+server.listen(port, function () {
+  console.log("App running on : " + port);
 });
