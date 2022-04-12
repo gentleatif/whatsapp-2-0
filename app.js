@@ -43,7 +43,7 @@ app.use(
     extended: true,
   })
 );
-
+// build pack removing
 
 const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
 client.on("message", (msg) => {
