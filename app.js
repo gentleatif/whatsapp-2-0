@@ -358,6 +358,7 @@ app.post("/send-bulkmsg", async (req, res) => {
     const names = contacts.map((contact) => contact.Name);
     contacts = contacts.map((contact) => `91${contact.Phone}@c.us`);
     contacts.forEach((singleNo, index, array) => {
+      console.log(singleNo, index, array.length);
       const interval = 5000; // 5 sec wait for each send
       // console.log("Hi " + names[index] + " " + message);
       setTimeout(function () {
@@ -366,16 +367,10 @@ app.post("/send-bulkmsg", async (req, res) => {
             singleNo,
             "Jai Jinendra " + names[index] + "\n" + message
           )
-          .then((response) =>
-            client.sendMessage(singleNo, message2).then((response) => response)
-          )
           .then((response) => {
-            if (index == array.length - 1) {
-              return res.status(200).json({
-                status: true,
-                response: response,
-              });
-            }
+            client.sendMessage(singleNo, message2).then((response) => {
+              console.log(response);
+            });
           })
           .catch((err) => {
             console.log(err);
@@ -384,7 +379,6 @@ app.post("/send-bulkmsg", async (req, res) => {
     });
   }
 });
-
 // Send media AND bulk message
 
 app.post("/send-media", async (req, res) => {
