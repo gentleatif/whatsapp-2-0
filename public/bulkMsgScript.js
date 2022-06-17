@@ -38,13 +38,12 @@ form.addEventListener("submit", function (e) {
   formData.append("message2", message2);
   formData.append("file", file);
 
-  postData(
-    "https://https://whatsapp-2-0.herokuapp.com/send-bulkmsg",
-    formData
-  ).then((data) => {
-    console.log(data); // JSON data parsed by `data.json()` call
-    check(data);
-  });
+  postData("https://whatsapp-2-0.herokuapp.com/send-bulkmsg", formData).then(
+    (data) => {
+      console.log(data); // JSON data parsed by `data.json()` call
+      check(data);
+    }
+  );
 });
 
 // remove success message after 3 second
