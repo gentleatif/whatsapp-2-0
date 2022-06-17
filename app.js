@@ -250,104 +250,104 @@ app.post(
 
 // bulk message
 app.post("/send-bulkmsg", async (req, res) => {
-  console.log("send bulk msg called");
   console.log(req.files);
   // Array of No.
   const userEnteredNo = req.body.number;
   console.log(userEnteredNo);
   const message = req.body.message;
+  const message2 = req.body.message2;
   console.log(message);
   // Entering different block on the basis of mimetype
   // 1. Invalid file selected and and Not Entered any No
   if (req.files == null && userEnteredNo[4] == undefined) {
     console.log("not provided any value");
-    res.status(400).json({
+    return res.status(400).json({
       status: false,
       response: "Please Select a valid .vcf/.csv Contacts",
     });
   }
   //2. userEntered No
-  if (req.files == null && userEnteredNo[4]) {
-    console.log("User Entered Mobile No");
-    // format userEntered no in desired form
-    let formattedNo = [];
-    const UserInputNo = JSON.parse(userEnteredNo);
-    UserInputNo.forEach((num) => {
-      formattedNo.push(`91${num}@c.us`);
-    });
-    console.log(formattedNo);
-    // send message for each no.
-    formattedNo.forEach((singleNo, index, array) => {
-      const interval = 5000; // 5 sec wait for each send
-      setTimeout(function () {
-        console.log(index, singleNo, array.length - 1);
-        client
-          .sendMessage(singleNo, message)
-          .then((response) => {
-            if (index == array.length - 1) {
-              res.status(200).json({
-                status: true,
-                response: response,
-              });
-            }
-          })
-          .catch((err) => {
-            res.status(500).json({
-              status: false,
-              response: err,
-            });
-          });
-      }, index * interval);
-    });
-  }
+  // if (req.files == null && userEnteredNo[4]) {
+  //   console.log("User Entered Mobile No");
+  //   // format userEntered no in desired form
+  //   let formattedNo = [];
+  //   const UserInputNo = JSON.parse(userEnteredNo);
+  //   UserInputNo.forEach((num) => {
+  //     formattedNo.push(`91${num}@c.us`);
+  //   });
+  //   console.log(formattedNo);
+  //   // send message for each no.
+  //   formattedNo.forEach((singleNo, index, array) => {
+  //     const interval = 5000; // 5 sec wait for each send
+  //     setTimeout(function () {
+  //       console.log(index, singleNo, array.length - 1);
+  //       client
+  //         .sendMessage(singleNo, message)
+  //         .then((response) => {
+  //           if (index == array.length - 1) {
+  //             res.status(200).json({
+  //               status: true,
+  //               response: response,
+  //             });
+  //           }
+  //         })
+  //         .catch((err) => {
+  //           res.status(500).json({
+  //             status: false,
+  //             response: err,
+  //           });
+  //         });
+  //     }, index * interval);
+  //   });
+  // }
   //3. vcf file No
-  if (req.files && req.files.file.mimetype == "text/x-vcard") {
-    console.log("User Provided vcf contacts");
-    vcard.parseVcardFile(req.files.file.tempFilePath, function (err, contacts) {
-      if (err) console.log("oops:" + err);
-      else {
-        // format vcf no in desired form
-        let formattedNo = [];
-        const results = contacts.filter(
-          (contact) => contact.phone[0] != undefined
-        );
-        results.forEach((result) => {
-          formattedNo.push(`${result.phone[0].value}@c.us`);
-        });
-        const pureIndianFormat = formattedNo.filter((no) => {
-          return no.startsWith("+91") && no.length == 20;
-        });
-        const finalFormattedVcfNo = [];
-        pureIndianFormat.forEach((number, index) => {
-          let newNo = number.replace("+", "");
-          newNo = newNo.replace(/ +/g, "");
-          finalFormattedVcfNo.push(newNo);
-        });
-        finalFormattedVcfNo.forEach((singleNo, index, array) => {
-          const interval = 5000; // 5 sec wait for each send
-          setTimeout(function () {
-            console.log(index, singleNo, array.length);
-            client
-              .sendMessage(singleNo, message)
-              .then((response) => {
-                if (index == array.length - 1) {
-                  res.status(200).json({
-                    status: true,
-                    response: response,
-                  });
-                }
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  status: false,
-                  response: err,
-                });
-              });
-          }, index * interval);
-        });
-      }
-    });
-  }
+  // if (req.files && req.files.file.mimetype == "text/x-vcard") {
+  //   console.log("User Provided vcf contacts");
+  //   vcard.parseVcardFile(req.files.file.tempFilePath, function (err, contacts) {
+  //     if (err) console.log("oops:" + err);
+  //     else {
+  //       // format vcf no in desired form
+  //       let formattedNo = [];
+  //       const results = contacts.filter(
+  //         (contact) => contact.phone[0] != undefined
+  //       );
+  //       results.forEach((result) => {
+  //         formattedNo.push(`${result.phone[0].value}@c.us`);
+  //       });
+  //       const pureIndianFormat = formattedNo.filter((no) => {
+  //         return no.startsWith("+91") && no.length == 20;
+  //       });
+  //       const finalFormattedVcfNo = [];
+  //       pureIndianFormat.forEach((number, index) => {
+  //         let newNo = number.replace("+", "");
+  //         newNo = newNo.replace(/ +/g, "");
+  //         finalFormattedVcfNo.push(newNo);
+  //       });
+  //       finalFormattedVcfNo.forEach((singleNo, index, array) => {
+  //         const interval = 5000; // 5 sec wait for each send
+  //         setTimeout(function () {
+  //           console.log(index, singleNo, array.length);
+  //           client
+  //             .sendMessage(singleNo, message)
+  //             .then((response) => {
+  //               if (index == array.length - 1) {
+  //                 return res.status(200).json({
+  //                   status: true,
+  //                   response: response,
+  //                 });
+  //               }
+  //             })
+  //             .catch((err) => {
+  //               return res.status(500).json({
+  //                 status: false,
+  //                 response: err,
+  //               });
+  //             });
+  //         }, index * interval);
+  //       });
+  //     }
+  //   });
+  // }
   //4. csv file No
   if (req.files && req.files.file.mimetype == "text/csv") {
     console.log("User Provided csv contacts");
@@ -361,11 +361,14 @@ app.post("/send-bulkmsg", async (req, res) => {
       const interval = 5000; // 5 sec wait for each send
       // console.log("Hi " + names[index] + " " + message);
       setTimeout(function () {
-        console.log();
-        console.log(index, singleNo, array.length);
         client
-          .sendMessage(singleNo, "Jai Jinendra" + names[index] + "\n" + message)
+          .sendMessage(
+            singleNo,
+            "Jai Jinendra " + names[index] + "\n" + message
+          )
           .then((response) => {
+            client.sendMessage(singleNo, message2);
+
             if (index == array.length - 1) {
               return res.status(200).json({
                 status: true,
