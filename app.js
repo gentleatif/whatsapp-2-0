@@ -367,14 +367,14 @@ app.post("/send-bulkmsg", async (req, res) => {
           .sendMessage(singleNo, "Jai Jinendra" + names[index] + "\n" + message)
           .then((response) => {
             if (index == array.length - 1) {
-              res.status(200).json({
+              return res.status(200).json({
                 status: true,
                 response: response,
               });
             }
           })
           .catch((err) => {
-            res.status(500).json({
+            return res.status(500).json({
               status: false,
               response: err,
             });
