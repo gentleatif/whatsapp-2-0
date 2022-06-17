@@ -366,16 +366,16 @@ app.post("/send-bulkmsg", async (req, res) => {
             singleNo,
             "Jai Jinendra " + names[index] + "\n" + message
           )
-          .then((response) => {
-            client.sendMessage(singleNo, message2);
-
-            if (index == array.length - 1) {
-              return res.status(200).json({
-                status: true,
-                response: response,
-              });
-            }
-          })
+          .then((response) =>
+            client.sendMessage(singleNo, message2).then((response) => {
+              if (index == array.length - 1) {
+                return res.status(200).json({
+                  status: true,
+                  response: response,
+                });
+              }
+            })
+          )
           .catch((err) => {
             return res.status(500).json({
               status: false,
