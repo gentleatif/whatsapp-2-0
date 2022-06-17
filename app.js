@@ -12,6 +12,7 @@ const axios = require("axios");
 const mime = require("mime-types");
 const vcard = require("vcard-json");
 const bodyParser = require("body-parser");
+const { constants } = require("buffer");
 const port = process.env.PORT || 8000;
 
 // const isLoggedIn = require("./helpers/auth");
@@ -190,13 +191,13 @@ app.get("/send-message", isLoggedIn, (req, res) => {
   });
 });
 //visit bulk msg page
-app.get("/send-bulkmsg", isLoggedIn, (req, res) => {
+app.get("/send-bulkmsg", (req, res) => {
   res.sendFile("bulkMsg.html", {
     root: __dirname,
   });
 });
 //visit bulk msg page
-app.get("/send-media", isLoggedIn, (req, res) => {
+app.get("/send-media", (req, res) => {
   res.sendFile("bulkMedia.html", {
     root: __dirname,
   });
@@ -249,6 +250,8 @@ app.post(
 
 // bulk message
 app.post("/send-bulkmsg", async (req, res) => {
+  console.log("send bulk msg called");
+  console.log(req.files);
   // Array of No.
   const userEnteredNo = req.body.number;
   console.log(userEnteredNo);
@@ -346,19 +349,22 @@ app.post("/send-bulkmsg", async (req, res) => {
     });
   }
   //4. csv file No
-  if (req.files && req.files.file.mimetype == "application/vnd.ms-excel") {
+  if (req.files && req.files.file.mimetype == "text/csv") {
     console.log("User Provided csv contacts");
     // retrieving csv contacts
     let contacts = await csv().fromFile(req.files.file.tempFilePath);
     // filter out undefined contact
     contacts = contacts.filter((contact) => contact.Phone != undefined);
+    const names = contacts.map((contact) => contact.Name);
     contacts = contacts.map((contact) => `91${contact.Phone}@c.us`);
     contacts.forEach((singleNo, index, array) => {
       const interval = 5000; // 5 sec wait for each send
+      // console.log("Hi " + names[index] + " " + message);
       setTimeout(function () {
+        console.log();
         console.log(index, singleNo, array.length);
         client
-          .sendMessage(singleNo, message)
+          .sendMessage(singleNo, "Jai Jinendra" + names[index] + "\n" + message)
           .then((response) => {
             if (index == array.length - 1) {
               res.status(200).json({
@@ -381,6 +387,7 @@ app.post("/send-bulkmsg", async (req, res) => {
 // Send media AND bulk message
 
 app.post("/send-media", async (req, res) => {
+  console.log("send media called");
   const file = [];
   if (req.files.file1 != null) {
     const img = {
