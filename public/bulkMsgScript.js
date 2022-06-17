@@ -47,7 +47,7 @@ form.addEventListener("submit", function (e) {
 });
 
 // remove success message after 3 second
-// add for redeploy
+
 function successMessage() {
   document.querySelector(".alert").classList.remove("hide");
 
