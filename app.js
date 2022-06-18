@@ -477,8 +477,6 @@ app.post("/send-media", async (req, res) => {
           });
         });
       }, files.length * index * 5000 + 1);
-
-      // runs files.forEach for each single No end
     });
   }
 });
