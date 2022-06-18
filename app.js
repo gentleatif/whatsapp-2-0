@@ -14,6 +14,7 @@ const vcard = require("vcard-json");
 const bodyParser = require("body-parser");
 const { constants } = require("buffer");
 const port = process.env.PORT || 8000;
+var cors = require("cors");
 
 // const isLoggedIn = require("./helpers/auth");
 const app = express();
@@ -27,6 +28,7 @@ app.use(
 );
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -156,14 +158,14 @@ const permittedUser = [
   "918488049280",
   "917463923165",
 ];
-function isLoggedIn(req, res, next) {
-  // if user is authenticated in the session, carry on
-  if (client.info != undefined && permittedUser.includes(client.info.wid.user))
-    return next();
+// function isLoggedIn(req, res, next) {
+//   // if user is authenticated in the session, carry on
+//   if (client.info != undefined && permittedUser.includes(client.info.wid.user))
+//     return next();
 
-  // if they aren't redirect them to the home page
-  res.redirect("/unauthorized");
-}
+//   // if they aren't redirect them to the home page
+//   res.redirect("/unauthorized");
+// }
 app.get("/", (req, res) => {
   res.sendFile("index.html", {
     root: __dirname,
@@ -183,8 +185,9 @@ app.get("/signout", function (req, res) {
 });
 
 // Send message
-app.get("/send-message", isLoggedIn, (req, res) => {
-  console.log(client.info.wid.user);
+
+app.get("/send-message", (req, res) => {
+  console.log(client);
 
   res.sendFile("message.html", {
     root: __dirname,
@@ -198,6 +201,7 @@ app.get("/send-bulkmsg", (req, res) => {
 });
 //visit bulk msg page
 app.get("/send-media", (req, res) => {
+  console.log(client);
   res.sendFile("bulkMedia.html", {
     root: __dirname,
   });
@@ -250,7 +254,8 @@ app.post(
 
 // bulk message
 app.post("/send-bulkmsg", async (req, res) => {
-  console.log(req.files);
+  console.log(client);
+  console.log("req.files from send-bulkmsg ===>", req.files);
   // Array of No.
   const userEnteredNo = req.body.number;
   console.log(userEnteredNo);
@@ -312,6 +317,8 @@ app.post("/send-bulkmsg", async (req, res) => {
 
 app.post("/send-media", async (req, res) => {
   console.log("send media called");
+  console.log("req.files======> ", req.files);
+  const message1 = req.body.message1;
   const file = [];
   if (req.files.file1 != null) {
     const img = {
@@ -420,79 +427,18 @@ app.post("/send-media", async (req, res) => {
       // runs files.forEach for each single No end
     });
   }
-  //3. vcf file No  (make it contacts.mimetype)
-  if (req.files.contacts && req.files.contacts.mimetype == "text/x-vcard") {
-    console.log("User Provided vcf contacts");
-    vcard.parseVcardFile(
-      req.files.contacts.tempFilePath,
-      function (err, contacts) {
-        if (err) console.log("oops:" + err);
-        else {
-          // format vcf no in desired form
-          let formattedNo = [];
-          const results = contacts.filter(
-            (contact) => contact.phone[0] != undefined
-          );
-          results.forEach((result) => {
-            formattedNo.push(`${result.phone[0].value}@c.us`);
-          });
-          const pureIndianFormat = formattedNo.filter((no) => {
-            return no.startsWith("+91") && no.length == 20;
-          });
-          const finalFormattedVcfNo = [];
-          pureIndianFormat.forEach((number, index) => {
-            let newNo = number.replace("+", "");
-            newNo = newNo.replace(/ +/g, "");
-            finalFormattedVcfNo.push(newNo);
-          });
-          finalFormattedVcfNo.forEach((singleNo, index, array) => {
-            // runs files.forEach for each single No
-            setTimeout(function () {
-              files.forEach((singlefile, filesIndex, filesArray) => {
-                const interval = 5000; // 5 sec wait for each send
-                setTimeout(function () {
-                  // forEach no you have to send Each file
-                  client
-                    .sendMessage(singleNo, singlefile.media, {
-                      caption: singlefile.caption,
-                    })
-                    .then((response) => {
-                      if (
-                        index == array.length - 1 &&
-                        filesIndex == filesArray.length - 1
-                      ) {
-                        res.status(200).json({
-                          status: true,
-                          response: response,
-                        });
-                      }
-                    })
-                    .catch((err) => {
-                      res.status(500).json({
-                        status: false,
-                        response: err,
-                      });
-                    });
-                }, filesIndex * interval);
-              });
-            }, files.length * index * 5000 + 1);
 
-            // runs files.forEach for each single No end
-          });
-        }
-      }
-    );
-  }
   //4. csv file No
-  if (
-    req.files.contacts &&
-    req.files.contacts.mimetype == "application/vnd.ms-excel"
-  ) {
+  if (req.files.contacts && req.files.contacts.mimetype == "text/csv") {
     console.log("User Provided csv contacts");
     // retrieving csv contacts
+    console.log(req.files);
     let contacts = await csv().fromFile(req.files.contacts.tempFilePath);
+
     // filter out undefined contact
     contacts = contacts.filter((contact) => contact.Phone != undefined);
+    // return only first part of fullName by splitting at space
+    const names = contacts.map((contact) => contact.Name.split(" ")[0]);
     contacts = contacts.map((contact) => `91${contact.Phone}@c.us`);
     contacts.forEach((singleNo, index, array) => {
       // runs files.forEach for each single No
@@ -500,29 +446,35 @@ app.post("/send-media", async (req, res) => {
         files.forEach((singlefile, filesIndex, filesArray) => {
           const interval = 5000; // 5 sec wait for each send
           setTimeout(function () {
-            // forEach no you have to send Each file
             client
-              .sendMessage(singleNo, singlefile.media, {
-                caption: singlefile.caption,
-              })
+              .sendMessage(
+                singleNo,
+                "Jai Jinendra " + names[index] + "\n" + message1
+              )
               .then((response) => {
-                if (
-                  index == array.length - 1 &&
-                  filesIndex == filesArray.length - 1
-                ) {
-                  res.status(200).json({
-                    status: true,
-                    response: response,
+                client
+                  .sendMessage(singleNo, singlefile.media, {
+                    caption: singlefile.caption,
+                  })
+                  .then((response) => {
+                    if (
+                      index == array.length - 1 &&
+                      filesIndex == filesArray.length - 1
+                    ) {
+                      res.status(200).json({
+                        status: true,
+                        response: response,
+                      });
+                    }
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      status: false,
+                      response: err,
+                    });
                   });
-                }
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  status: false,
-                  response: err,
-                });
-              });
-          }, filesIndex * interval);
+              }, filesIndex * interval);
+          });
         });
       }, files.length * index * 5000 + 1);
 

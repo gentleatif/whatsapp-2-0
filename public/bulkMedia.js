@@ -22,6 +22,7 @@ form.addEventListener("submit", function (e) {
   const caption2 = e.target.caption2.value;
   const caption3 = e.target.caption3.value;
   const caption4 = e.target.caption4.value;
+  const message1 = e.target.message1.value;
   console.log(caption1, caption2, caption3, caption4);
   const contacts = e.target.contactfile.files[0];
 
@@ -44,6 +45,7 @@ form.addEventListener("submit", function (e) {
   formData.append("caption2", caption2);
   formData.append("caption3", caption3);
   formData.append("caption4", caption4);
+  formData.append("message1", message1);
   formData.append("number", JSON.stringify(arrayOfNum));
 
   postData("https://whatsapp-2-0.herokuapp.com/send-media", formData).then(
