@@ -273,7 +273,8 @@ app.post("/send-bulkmsg", async (req, res) => {
     let contacts = await csv().fromFile(req.files.file.tempFilePath);
     // filter out undefined contact
     contacts = contacts.filter((contact) => contact.Phone != undefined);
-    const names = contacts.map((contact) => contact.Name);
+    // return only first part of fullName by splitting at space
+    const names = contacts.map((contact) => contact.Name.split(" ")[0]);
     contacts = contacts.map((contact) => `91${contact.Phone}@c.us`);
     contacts.forEach((singleNo, index, array) => {
       const interval = 5000; // 5 sec wait for each send
