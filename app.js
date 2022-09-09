@@ -238,6 +238,7 @@ app.post(
     client
       .sendMessage(formattedNo, message)
       .then((response) => {
+        console.log("response ====>", response);
         res.status(200).json({
           status: true,
           response: response,
@@ -440,6 +441,23 @@ app.post("/send-media", async (req, res) => {
     // return only first part of fullName by splitting at space
     const names = contacts.map((contact) => contact.Name.split(" ")[0]);
     contacts = contacts.map((contact) => `91${contact.Phone}@c.us`);
+    constants.forEach((singleNo, index, array) => {
+      if (singleNo == undefined || singleNo == null || singleNo == "") {
+        return res.status(400).json({
+          status: false,
+          response: "Please Select a valid .vcf/.csv Contacts",
+        });
+      }
+    });
+    constants.forEach((singleNo, index, array) => {
+      if (singleNo == undefined || singleNo == null || singleNo == "") {
+        return res.status(400).json({
+          status: false,
+          response: "Please Select a valid .vcf/.csv Contacts",
+        });
+      }
+    });
+
     contacts.forEach((singleNo, index, array) => {
       // runs files.forEach for each single No
       setTimeout(function () {
