@@ -56,7 +56,9 @@
         });
         socket.on("disconnected", function (data) {
           // $("#qrcode").hide();
-          console.log("data on auth" + data);
+          console.log("data " + data);
+          // redirect to home page
+          window.location.href = "/";
         });
       });
     </script>

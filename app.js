@@ -100,6 +100,11 @@ io.on("connection", function (socket) {
     client.logout();
     client.destroy();
     client.initialize();
+
+    // redirect to login page
+    // restart app on disconnect
+
+    // socket.emit("status", "0");
   });
 });
 const checkRegisteredNumber = async function (number) {
@@ -114,17 +119,19 @@ const permittedUser = [
   "917463923165",
 ];
 function isLoggedIn(req, res, next) {
-  // if user is authenticated in the session, carry on
-  if (client.info != undefined && permittedUser.includes(client.info.wid.user))
-    return next();
-
-  // if they aren't redirect them to the home page
-  res.redirect("/unauthorized");
+  // if (client.info != undefined) return next();
+  // res.redirect("/unauthorized");
+  return next();
 }
 app.get("/", (req, res) => {
-  res.sendFile("index.html", {
-    root: __dirname,
-  });
+  // check if logged in
+  if (client.info != undefined) {
+    res.redirect("/send-message");
+  } else {
+    res.sendFile("index.html", {
+      root: __dirname,
+    });
+  }
 });
 app.get("/unauthorized", (req, res) => {
   res.sendFile("unauthorized.html", {
@@ -148,8 +155,6 @@ app.get("/signout", function (req, res) {
 // Send message
 
 app.get("/send-message", isLoggedIn, (req, res) => {
-  console.log(client);
-
   res.sendFile("message.html", {
     root: __dirname,
   });
@@ -216,42 +221,85 @@ app.post(
 
 // bulk message
 app.post("/send-bulkmsg", async (req, res) => {
-  console.log(client);
-  console.log("req.files from send-bulkmsg ===>", req.files);
-  // Array of No.
   const userEnteredNo = req.body.number;
-  console.log(userEnteredNo);
   const message = req.body.message;
   const message2 = req.body.message2;
-  console.log(message);
-  // Entering different block on the basis of mimetype
-  // 1. Invalid file selected and and Not Entered any No
+  const salutation = req.body.salutation;
+  // validation
   if (req.files == null && userEnteredNo[4] == undefined) {
-    console.log("not provided any value");
     return res.status(400).json({
       status: false,
-      response: "Please Select a valid .vcf/.csv Contacts",
+      response: "Please Provide contact no. or select file",
     });
   }
-  //4. csv file No
+  if (salutation == "") {
+    return res.status(422).json({
+      status: false,
+      message: "Please Enter Salutation",
+    });
+  }
+
+  if (message == "") {
+    return res.status(422).json({
+      status: false,
+      message: "Please Enter Salutation Description",
+    });
+  }
+  // validation end
+  //1. csv file No
   if (req.files && req.files.file.mimetype == "text/csv") {
     console.log("User Provided csv contacts");
-    // retrieving csv contacts
     let contacts = await csv().fromFile(req.files.file.tempFilePath);
-    // filter out undefined contact
     contacts = contacts.filter((contact) => contact.Phone != undefined);
-    // return only first part of fullName by splitting at space
     const names = contacts.map((contact) => contact.Name.split(" ")[0]);
     contacts = contacts.map((contact) => `91${contact.Phone}@c.us`);
     contacts.forEach((singleNo, index, array) => {
-      const interval = 5000; // 5 sec wait for each send
-      // console.log("Hi " + names[index] + " " + message);
+      const interval = 5000;
       setTimeout(function () {
         client
           .sendMessage(
             singleNo,
-            "Jai Jinendra " + names[index] + "\n" + message
+            salutation + " " + names[index] + "," + "\n" + message
           )
+          .then((response) => {
+            client
+              .sendMessage(singleNo, message2)
+              .then((response) => {
+                console.log("response ===>", response);
+                if (index == array.length - 1) {
+                  return res.status(200).json({
+                    status: true,
+                    response: response,
+                  });
+                }
+              })
+              .catch((err) => {
+                return res.status(500).json({
+                  status: false,
+                  response: err,
+                });
+              });
+          }, index * interval);
+      });
+    });
+  }
+  // 2. user entered no and not csv file
+  if (userEnteredNo[4] != undefined && req.files == null) {
+    console.log("User Entered Mobile No");
+    // format userEntered no in desired form
+    let formattedNo = [];
+    const UserInputNo = JSON.parse(userEnteredNo);
+    UserInputNo.forEach((num) => {
+      formattedNo.push(`91${num}@c.us`);
+    });
+    console.log("formatted no ===>", formattedNo);
+
+    // send message for each no.
+    formattedNo.forEach((singleNo, index, array) => {
+      const interval = 5000;
+      setTimeout(function () {
+        client
+          .sendMessage(singleNo, salutation + " " + "\n" + message)
           .then((response) => {
             client
               .sendMessage(singleNo, message2)
@@ -280,38 +328,45 @@ app.post("/send-bulkmsg", async (req, res) => {
 app.post("/send-media", async (req, res) => {
   console.log("send media called");
   console.log("req.files======> ", req.files);
-  const message1 = req.body.message1;
+
   const file = [];
-  if (req.files.file1 != null) {
+  if (req.files?.file1 != null) {
     const img = {
       img: req.files.file1,
       caption: req.body.caption1,
     };
     file.push(img);
   }
-  if (req.files.file2 != null) {
+  if (req.files?.file2 != null) {
     const img = {
       img: req.files.file2,
       caption: req.body.caption2,
     };
     file.push(img);
   }
-  if (req.files.file3 != null) {
+  if (req.files?.file3 != null) {
     const img = {
       img: req.files.file3,
       caption: req.body.caption3,
     };
     file.push(img);
   }
-  if (req.files.file4 != null) {
+  if (req.files?.file4 != null) {
     const img = {
       img: req.files.file4,
       caption: req.body.caption4,
     };
     file.push(img);
   }
+  // if all of the above file is null then return error
+  if (file.length == 0) {
+    return res.status(422).json({
+      status: false,
+      response: "Please Provide atleast one file to send",
+    });
+  }
 
-  const userEnteredNo = req.body.number; //array of no.
+  const userEnteredNo = req.body.number;
   const data = file.map((singleFile) => {
     const data = {
       mimetype: singleFile.img.mimetype,
@@ -334,17 +389,21 @@ app.post("/send-media", async (req, res) => {
     return imgData;
   });
 
-  // Entering different block on the basis of mimetype
-  // 1. Invalid file selected and and Not Entered any No
-  if (req.files.contacts == null && userEnteredNo[4] == undefined) {
+  // validation for no. and file
+  // Phone validation
+  if (req.files?.contacts == null && userEnteredNo[4] == undefined) {
     console.log("not provided any value");
-    res.status(400).json({
+    res.status(422).json({
       status: false,
-      response: "Please Select a valid .vcf/.csv Contacts",
+      response: "Please Select a valid .vcf/.csv Contacts or type a number",
     });
   }
+  // file validation
+  if (req.files?.contacts != null) {
+  }
+
   //2. userEntered No
-  if (req.files.contacts == null && userEnteredNo[4]) {
+  if (req.files?.contacts == null && userEnteredNo[4]) {
     console.log("User Entered Mobile No");
     // format userEntered no in desired form
     let formattedNo = [];
@@ -391,7 +450,7 @@ app.post("/send-media", async (req, res) => {
   }
 
   //4. csv file No
-  if (req.files.contacts && req.files.contacts.mimetype == "text/csv") {
+  if (req.files?.contacts && req.files?.contacts.mimetype == "text/csv") {
     console.log("User Provided csv contacts");
     // retrieving csv contacts
     console.log(req.files);
@@ -428,7 +487,7 @@ app.post("/send-media", async (req, res) => {
             client
               .sendMessage(
                 singleNo,
-                "Jai Jinendra " + names[index] + "\n" + message1
+                salutation + names[index] + "\n" + message1
               )
               .then((response) => {
                 client
@@ -459,15 +518,6 @@ app.post("/send-media", async (req, res) => {
     });
   }
 });
-
-const findGroupByName = async function (name) {
-  const group = await client.getChats().then((chats) => {
-    return chats.find(
-      (chat) => chat.isGroup && chat.name.toLowerCase() == name.toLowerCase()
-    );
-  });
-  return group;
-};
 
 // Send message to group
 // You can use chatID or group name, yea!
