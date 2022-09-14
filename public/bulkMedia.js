@@ -48,7 +48,7 @@ form.addEventListener("submit", function (e) {
   formData.append("message1", message1);
   formData.append("number", JSON.stringify(arrayOfNum));
   // "https://whatsapp-2-0.herokuapp.com/send-media"
-  postData("https://whatsapp-2-0.herokuapp.com/send-media", formData).then(
+  postData("http://localhost:8000/send-bulkmsg/send-media", formData).then(
     (data) => {
       console.log(data); // JSON data parsed by `data.json()` call
       check(data);

@@ -8,9 +8,6 @@ const http = require("http");
 const fs = require("fs");
 const { phoneNumberFormatter } = require("./helpers/formatter");
 const fileUpload = require("express-fileupload");
-const axios = require("axios");
-const mime = require("mime-types");
-const vcard = require("vcard-json");
 const bodyParser = require("body-parser");
 const { constants } = require("buffer");
 const port = process.env.PORT || 8000;
@@ -70,43 +67,6 @@ client.on("message", (msg) => {
       }
     });
   }
-
-  // Downloading media
-  // if (msg.hasMedia) {
-  //   msg.downloadMedia().then((media) => {
-  //     // To better understanding
-  //     // Please look at the console what data we get
-  //     console.log(media);
-
-  //     if (media) {
-  //       // The folder to store: change as you want!
-  //       // Create if not exists
-  //       const mediaPath = "./downloaded-media/";
-
-  //       if (!fs.existsSync(mediaPath)) {
-  //         fs.mkdirSync(mediaPath);
-  //       }
-
-  //       // Get the file extension by mime-type
-  //       const extension = mime.extension(media.mimetype);
-
-  //       // Filename: change as you want!
-  //       // I will use the time for this example
-  //       // Why not use media.filename? Because the value is not certain exists
-  //       const filename = new Date().getTime();
-
-  //       const fullFilename = mediaPath + filename + "." + extension;
-
-  //       // Save to file
-  //       try {
-  //         fs.writeFileSync(fullFilename, media.data, { encoding: "base64" });
-  //         console.log("File downloaded successfully!", fullFilename);
-  //       } catch (err) {
-  //         console.log("Failed to save the file:", err);
-  //       }
-  //     }
-  //   });
-  // }
 });
 
 client.initialize();
@@ -137,11 +97,6 @@ io.on("connection", function (socket) {
   });
 
   client.on("disconnected", (reason) => {
-    // socket.emit("message", "Whatsapp is disconnected!");
-    // fs.unlinkSync(SESSION_FILE_PATH, function (err) {
-    //   if (err) return console.log(err);
-    //   console.log("Session file deleted!");
-    // });
     client.logout();
     client.destroy();
     client.initialize();
@@ -158,14 +113,14 @@ const permittedUser = [
   "918488049280",
   "917463923165",
 ];
-// function isLoggedIn(req, res, next) {
-//   // if user is authenticated in the session, carry on
-//   if (client.info != undefined && permittedUser.includes(client.info.wid.user))
-//     return next();
+function isLoggedIn(req, res, next) {
+  // if user is authenticated in the session, carry on
+  if (client.info != undefined && permittedUser.includes(client.info.wid.user))
+    return next();
 
-//   // if they aren't redirect them to the home page
-//   res.redirect("/unauthorized");
-// }
+  // if they aren't redirect them to the home page
+  res.redirect("/unauthorized");
+}
 app.get("/", (req, res) => {
   res.sendFile("index.html", {
     root: __dirname,
@@ -179,14 +134,20 @@ app.get("/unauthorized", (req, res) => {
 // send user for auth when clicked on login icon
 
 app.get("/signout", function (req, res) {
-  client.info.wid.user = "";
-  client.logout();
-  res.redirect("/");
+  if (client.info == undefined) {
+    console.log("No user is logged in");
+    res.redirect("/");
+  } else {
+    console.log("User was logged in");
+    client.info.wid.user = "";
+    client.logout();
+    res.redirect("/");
+  }
 });
 
 // Send message
 
-app.get("/send-message", (req, res) => {
+app.get("/send-message", isLoggedIn, (req, res) => {
   console.log(client);
 
   res.sendFile("message.html", {
@@ -194,13 +155,13 @@ app.get("/send-message", (req, res) => {
   });
 });
 //visit bulk msg page
-app.get("/send-bulkmsg", (req, res) => {
+app.get("/send-bulkmsg", isLoggedIn, (req, res) => {
   res.sendFile("bulkMsg.html", {
     root: __dirname,
   });
 });
 //visit bulk msg page
-app.get("/send-media", (req, res) => {
+app.get("/send-media", isLoggedIn, (req, res) => {
   console.log(client);
   res.sendFile("bulkMedia.html", {
     root: __dirname,

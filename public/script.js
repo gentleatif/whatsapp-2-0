@@ -25,7 +25,7 @@ form.addEventListener("submit", function (e) {
   e.target.number.value = "";
   console.log(number, message);
 
-  postData("https://whatsapp-2-0.herokuapp.com/send-message", {
+  postData("http://localhost:8000/send-message", {
     number: number,
     message: message,
   }).then((data) => {
