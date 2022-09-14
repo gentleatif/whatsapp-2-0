@@ -119,9 +119,9 @@ const permittedUser = [
   "917463923165",
 ];
 function isLoggedIn(req, res, next) {
-  // if (client.info != undefined) return next();
-  // res.redirect("/unauthorized");
-  return next();
+  if (client.info != undefined) return next();
+  res.redirect("/unauthorized");
+  // return next();
 }
 app.get("/", (req, res) => {
   // check if logged in

@@ -41,14 +41,17 @@ form.addEventListener("submit", function (e) {
   formData.append("salutation", salutation);
   formData.append("file", file);
   // https://whatsapp-2-0.herokuapp.com/send-bulkmsg
-  postData("http://localhost:8000/send-bulkmsg", formData).then((data) => {
-    data.json().then((data) => {
-      console.log("data response ==> ", data);
-      check(data.message);
-    });
-    // console.log(data); // JSON data parsed by `data.json()` call
-    // check(data);
-  });
+  // "http://localhost:8000/send-bulkmsg"
+  postData("https://whatsapp-2-0.herokuapp.com/send-bulkmsg", formData).then(
+    (data) => {
+      data.json().then((data) => {
+        console.log("data response ==> ", data);
+        check(data.message);
+      });
+      // console.log(data); // JSON data parsed by `data.json()` call
+      // check(data);
+    }
+  );
 });
 
 // remove success message after 3 second
