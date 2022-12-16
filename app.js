@@ -15,6 +15,7 @@ var cors = require("cors");
 
 // const isLoggedIn = require("./helpers/auth");
 const app = express();
+
 // Note that this option available for versions 1.0.0 and newer.
 // for parsing file from
 app.use(
@@ -44,7 +45,13 @@ app.use(
   })
 );
 
-const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
+// const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
+const client = new Client({
+  puppeteer: {
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
+});
 client.on("message", (msg) => {
   if (msg.body == "!ping") {
     msg.reply("pong");

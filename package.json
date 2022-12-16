@@ -28,6 +28,7 @@
     "http": "0.0.1-security",
     "mime-types": "^2.1.32",
     "mongoose": "^6.2.9",
+    "puppeteer-chromium-resolver": "^19.1.0",
     "qrcode": "^1.4.4",
     "socket.io": "2.3.0",
     "vcard-json": "^0.5.2",
