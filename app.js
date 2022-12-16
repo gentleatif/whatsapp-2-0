@@ -48,8 +48,15 @@ app.use(
 // const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
 
 const browser = await puppeteer.launch({
-  headless: false,
-  args: ["--no-sandbox"],
+  args: [
+    "--disable-gpu",
+    "--disable-dev-shm-usage",
+    "--disable-setuid-sandbox",
+    "--no-first-run",
+    "--no-sandbox",
+    "--no-zygote",
+    "--single-process",
+  ],
 });
 const client = new Client({ puppeteer: { browser } });
 client.on("message", (msg) => {
