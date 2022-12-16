@@ -46,12 +46,12 @@ app.use(
 );
 
 // const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
-const client = new Client({
-  puppeteer: {
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  },
+
+const browser = await puppeteer.launch({
+  headless: false,
+  args: ["--no-sandbox"],
 });
+const client = new Client({ puppeteer: { browser } });
 client.on("message", (msg) => {
   if (msg.body == "!ping") {
     msg.reply("pong");
