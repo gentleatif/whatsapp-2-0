@@ -1,5 +1,6 @@
 const { Client, ClientInfo, MessageMedia, NoAuth } = require("whatsapp-web.js");
 const csv = require("csvtojson");
+const puppeteer = require("puppeteer");
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const socketIO = require("socket.io");
@@ -47,7 +48,7 @@ app.use(
 
 // const client = new Client({ puppeteer: { args: ["--no-sandbox"] } });
 
-const browser = await puppeteer.launch({
+const browser = puppeteer.launch({
   args: [
     "--disable-gpu",
     "--disable-dev-shm-usage",
