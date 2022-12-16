@@ -39,6 +39,7 @@
         });
 
         socket.on("qr", function (src) {
+          console.log("qr is come in frontend ===>", src);
           $("#qrcode").attr("src", src);
           $("#qrcode").show();
         });

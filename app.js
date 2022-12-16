@@ -27,6 +27,8 @@ app.use(
 );
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// allow all cors
 app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
