@@ -48,14 +48,12 @@ form.addEventListener("submit", function (e) {
   // formData.append("message1", message1);
   formData.append("number", JSON.stringify(arrayOfNum));
   // "https://whatsapp-2-0.herokuapp.com/send-media"
-  postData("https://whatsapp-2-0.herokuapp.com/send-media", formData).then(
-    (data) => {
-      data.json().then((data) => {
-        console.log("data response ==> ", data);
-        check(data.response);
-      });
-    }
-  );
+  postData("http://localhost:3000/send-media", formData).then((data) => {
+    data.json().then((data) => {
+      console.log("data response ==> ", data);
+      check(data.response);
+    });
+  });
 });
 
 // remove success message after 3 second
